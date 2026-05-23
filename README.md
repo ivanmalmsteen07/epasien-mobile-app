@@ -42,16 +42,16 @@ Sistem ini menerapkan pola arsitektur **Hybrid Decentralized Sync** untuk memini
 ```mermaid
 graph TD
     %% Node Definitions
-    subgraph LAN_RS [🏥 Server SIMRS Utama (Lokal RS)]
+    subgraph LAN_RS ["🏥 Server SIMRS Utama (Lokal RS)"]
         DB_Lokal[(Database SIMRS)]
     end
     
-    subgraph Cloud_Server [🖥️ Server API Production (XAMPP/Cloud)]
+    subgraph Cloud_Server ["🖥️ Server API Production (XAMPP/Cloud)"]
         API_PHP[api-epasien-backend]
         DB_Cloud[(Database Sync/Mirror)]
     end
     
-    subgraph Mobile_App [📱 Client Device]
+    subgraph Mobile_App ["📱 Client Device"]
         SecureStore[(Secure Store JWT)]
         App_UI[Aplikasi E-Pasien Mobile]
     end
