@@ -25,6 +25,7 @@
 - [⚙️ Aturan & SOP Pemrograman (Coding Guidelines)](#️-aturan--sop-pemrograman-coding-guidelines)
 - [🚀 Panduan Setup & Instalasi](#-panduan-setup--instalasi)
 - [📊 Panduan Variabel Lingkungan (.env)](#-panduan-variabel-lingkungan-env)
+- [🔔 Konfigurasi Push Notification (FCM)](#-konfigurasi-push-notification-firebase-cloud-messaging---fcm)
 - [🤝 Kontribusi & Workflow Git](#-kontribusi--workflow-git)
 
 ---
@@ -185,6 +186,76 @@ EXPO_PUBLIC_API_URL=http://localhost/api-epasien/data
 # Identitas Project ID dari Akun Expo Application Services (EAS) Anda (Ganti dengan Project ID Anda sendiri)
 EXPO_PUBLIC_EAS_PROJECT_ID=
 ```
+
+---
+
+## 🔔 Konfigurasi Push Notification (Firebase Cloud Messaging - FCM)
+
+Aplikasi ini menggunakan layanan **Expo Push Notifications** yang dihubungkan dengan **Google Firebase Cloud Messaging (FCM)** untuk mengirimkan pemberitahuan/notifikasi secara real-time ke perangkat Android pasien.
+
+Agar push notification dapat bekerja, Anda **wajib** mengonfigurasi proyek Firebase dan menghubungkannya dengan akun Expo Anda. Berikut adalah langkah-langkah detailnya:
+
+### 1. Buat Proyek Baru di Firebase
+1. Buka [Firebase Console](https://console.firebase.google.com/).
+2. Klik **Add Project** (Tambah Proyek), masukkan nama proyek (misalnya: `epasien-mobile-app`), lalu ikuti panduan hingga proyek berhasil dibuat.
+3. Aktifkan Google Analytics jika diperlukan, lalu klik **Create Project**.
+
+### 2. Registrasikan Aplikasi Android di Firebase
+1. Pada dashboard proyek Firebase baru Anda, klik ikon **Android** untuk menambahkan aplikasi.
+2. Isi formulir pendaftaran:
+   - **Android Package Name:** Wajib disamakan dengan konfigurasi di berkas `app.json` (Default: `com.standard.epasien`).
+   - **App Nickname (Opsional):** Misal `E-Pasien Mobile`.
+   - **Debug signing certificate SHA-1 (Opsional):** Bisa dikosongkan untuk saat ini.
+3. Klik **Register App**.
+
+### 3. Unduh & Konfigurasi `google-services.json`
+1. Unduh berkas **`google-services.json`** yang disediakan oleh Firebase.
+2. Pindahkan berkas tersebut ke **root direktori** proyek `epasien-mobile-app` Anda.
+3. Daftarkan file ini pada berkas `app.json` di dalam objek `"android"` agar terbaca saat proses build:
+   ```json
+   "android": {
+     "package": "com.standard.epasien",
+     "googleServicesFile": "./google-services.json"
+     // ... konfigurasi lainnya
+   }
+   ```
+
+### 4. Unduh Private Key Service Account Firebase
+Expo memerlukan akses kunci privat (Service Account) Firebase Anda untuk meneruskan notifikasi dari server Expo ke server FCM Google.
+1. Di Firebase Console, klik ikon ⚙️ (gerigi) di samping *Project Overview* lalu pilih **Project Settings**.
+2. Pilih tab **Service Accounts** (Akun Layanan).
+3. Klik tombol **Generate New Private Key** (Buat Kunci Privat Baru), lalu konfirmasi dengan mengklik **Generate Key**.
+4. Berkas kunci berupa berkas `.json` (kredensial service account) akan otomatis terunduh ke komputer Anda. Simpan berkas ini dengan aman.
+
+### 5. Hubungkan Kredensial FCM ke Expo (EAS)
+Terdapat dua cara untuk mengunggah kredensial FCM Anda ke sistem Expo:
+
+#### Cara A: Melalui EAS CLI (Terminal)
+1. Buka terminal pada root direktori proyek `epasien-mobile-app`.
+2. Jalankan perintah manajemen kredensial EAS:
+   ```bash
+   eas credentials
+   ```
+3. Pilih platform `Android` ➡️ Pilih build profile (misal `production` atau `preview`).
+4. Pilih opsi **FCM V1 Service Account Key** atau **Google Service Account**.
+5. Masukkan path lokasi berkas `.json` kunci privat Firebase yang telah Anda unduh pada **Langkah 4**.
+6. EAS CLI akan otomatis mengunggah dan mengonfigurasi kredensial tersebut ke akun Expo Anda.
+
+#### Cara B: Melalui Dashboard Expo.dev (Web)
+1. Buka browser dan login ke akun [Expo Dashboard](https://expo.dev/).
+2. Masuk ke halaman proyek Anda.
+3. Di panel menu sebelah kiri, buka **Project Settings** ➡️ **Credentials** ➡️ **Android**.
+4. Pilih profil build Anda (misal `production` atau `preview`).
+5. Pada bagian **FCM V1 Credentials** (atau Service Account Key), klik **Add Credentials** dan unggah berkas `.json` kunci privat Firebase yang diunduh pada **Langkah 4**.
+
+### 6. Verifikasi & Pengujian
+1. Build ulang aplikasi menggunakan EAS Build untuk menerapkan konfigurasi FCM baru:
+   ```bash
+   eas build -p android --profile preview
+   ```
+2. Jalankan aplikasi pada perangkat Android fisik (Push Notification tidak didukung penuh pada emulator).
+3. Token push perangkat akan digenerasi secara otomatis oleh fungsi `registerForPushNotificationsAsync()` di berkas `services/notification.ts` dan dikirimkan ke backend melalui endpoint `save_token.php`.
+4. Anda dapat menguji pengiriman push notification langsung melalui [Expo Push Notification Tool](https://expo.dev/notifications) dengan memasukkan token push perangkat Anda.
 
 ---
 
